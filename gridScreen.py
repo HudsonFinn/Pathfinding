@@ -35,9 +35,9 @@ class mainGrid:
 
     def click(self, event):
         x, y = event.x, event.y
-        self.updateGrid(x, y)
+        self.updateGridClick(x, y)
 
-    def updateGrid(self, x, y):
+    def updateGridClick(self, x, y):
         gridX = (ceil(x/self.boxSizeX)) - 1
         gridY = (ceil(y/self.boxSizeY)) - 1
         self.mainCanvas.itemconfigure(self.grid[gridY][gridX], fill="red")
