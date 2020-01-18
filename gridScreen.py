@@ -21,7 +21,8 @@ class mainGrid:
         self.mainCanvas.bind('<Button-1>', self.click)
         self.mainCanvas.bind('<Button-3>', self.rightClick)
         self.mainCanvas.bind('<space>', self.start)
-        self.createGrid(10, 10)
+        """NEEDS TO BE CHANGED SO YOU CAN EDIT SIZE WITH BUTTON"""
+        self.createGrid(20, 20)
         self.mainCanvas.focus_set()
 
     def createGrid(self, x, y):
@@ -34,10 +35,9 @@ class mainGrid:
             self.gridType.append([])
             for j in range(x):
                 self.grid[i].append(self.mainCanvas.create_rectangle(0, 0, 50, 50, fill="white"))
-                self.gridType[i].append([0, (10*i)+ j, 0, 1000000, j, i, 0])
-                print(i, j)
+                self.gridType[i].append([0, ((y-1)*i)+ j, 0, 1000000, j, i, 0])
                 self.mainCanvas.coords(self.grid[i][j], j*self.boxSizeX, i*self.boxSizeY, j*self.boxSizeX + self.boxSizeX, i*self.boxSizeY + self.boxSizeY)
-        print(self.gridType)
+
 
     def click(self, event):
         x, y = event.x, event.y
@@ -57,9 +57,9 @@ class mainGrid:
             self.mainCanvas.itemconfigure(self.grid[gridY][gridX], fill="white")
             self.gridType[gridY][gridX][0] = 0
         print(gridX, gridY)
-        print(self.gridType)
 
     def start(self, event):
+        """NEEDS TO BE CHANGED TO A WINDOW WHERE YOU CAN SELECT ORIGIN"""
         print("Hi")
         self.UseDjykstras(9, 9)
 
@@ -74,7 +74,6 @@ class mainGrid:
             self.gridType[gridY][gridX][0] = 0
 
         print(gridX, gridY)
-        print(self.gridType)
 
     def UseDjykstras(self, startX, startY):
         #0 is type (0 for normal, 1 for wall, 2 for target)
@@ -84,20 +83,23 @@ class mainGrid:
         #4 is x
         #5 is y
         #6 is unvisited
-        print(self.gridType)
         self.gridType[startX][startY][2] = -1
         self.gridType[startX][startY][3] = 0
-        found = False
         startNode = self.gridType[startY][startX]
         currentNode = self.gridType[startY][startX]
         currentNodes = [currentNode]
         self.state = 0
+        self.LoopDjykstras(currentNodes, startNode)
 
+        if self.state == 0:
+            self.LoopDjykstras(currentNodes, startNode)
+            time.sleep(0.05)
+        """
         while (self.state == 0):
             print(self.state)
             currentNodes = sorted(currentNodes, key=lambda x: (x[3]), reverse=False)
             for i, iValue in enumerate(currentNodes):
-                self.mainCanvas.itemconfigure(self.grid[currentNodes[i][5]][currentNodes[i][4]], fill="orange")#
+                self.mainCanvas.itemconfigure(self.grid[currentNodes[i][5]][currentNodes[i][4]], fill="orange")
                 self.mainCanvas.pack()
                 if self.state == 1:
                     break
@@ -106,6 +108,30 @@ class mainGrid:
                     currentNodes[i][6] = 1
                     print(currentNodes)
                     currentNodes = self.findAdjacent(currentNode, self.gridType, currentNodes, startNode)
+        """
+
+    def LoopDjykstras(self, currentNodes, startNode):
+        currentNodes = sorted(currentNodes, key=lambda x: (x[3], x[4], x[5]), reverse=False)
+        print(currentNodes)
+        print("START LOOP")
+        for i, iValue in enumerate(currentNodes):
+            #if self.state == 1:
+            #    break
+            print(currentNodes[i])
+            if iValue[6] == 0:
+                nextNode = i
+                break
+        currentNode = currentNodes[nextNode]
+        currentNodes[i][6] = 1
+        self.mainCanvas.itemconfigure(self.grid[currentNodes[nextNode][5]][currentNodes[nextNode][4]], fill="orange")
+        self.mainCanvas.update_idletasks()
+        currentNodes = self.findAdjacent(currentNode, self.gridType, currentNodes, startNode)
+        if self.state == 0:
+            print(currentNodes)
+            time.sleep(0.1)
+            self.LoopDjykstras(currentNodes, startNode)
+        else:
+            print("Done")
 
 
     def findAdjacent(self, Node, Nodes, currentNodes, startNode):
@@ -114,7 +140,6 @@ class mainGrid:
                     [-1, 1], [0, 1], [1, 1]]
         state = 0
         adjacentActive = []
-        print(Node)
         NodeX = Node[4]
         NodeY = Node[5]
         distance = Node[3]
@@ -122,17 +147,22 @@ class mainGrid:
             #if self.gridType[NodeX + adjacent[i][1]][NodeY + adjacent[i][0]][0] == 0:
             try:
                 if ((NodeX + adjacent[i][0]) >= 0) and ((NodeY + adjacent[i][1]) >= 0):
+                    print("Passed out of bounds check")
                     print(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
+                    #print(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
                     if Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][0] == 0:
-                        if Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][3] > (distance + 1):
-                            if i == 0 or i == 2 or i == 5 or i == 7:
+                        print("Passed proper type check")
+                        print(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
+                        """MAKE ENABLING CORNERS OPTIONAL"""
+                        if i == 0 or i == 2 or i == 5 or i == 7:
+                            if Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][3] > (distance + math.sqrt(2)):
                                 Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][3] = (distance + math.sqrt(2))
-                            else:
+                                Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][2] = (Node[1])
+                        else:
+                            if Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][3] > (distance + 1):
                                 Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][3] = (distance + 1)
-                            Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][2] = (Node[1])
+                                Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][2] = (Node[1])
                         adjacentActive.append(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
-                print(adjacentActive)
-                print("singles")
                 if Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][0] == 2:
                     self.state = 1
                     Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][2] = (Node[1])
@@ -145,12 +175,16 @@ class mainGrid:
             contains = False
             for j, jValue in enumerate(currentNodes):
                 if iValue[1] == jValue[1]:
+                    print("Value changed")
+                    print(iValue)
+                    print(jValue)
                     contains = True
                     if iValue[3] < jValue[3]:
                         currentNodes[j] = adjacentActive[i]
             if contains == False:
+                print("Passed Appened")
+                print(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
                 currentNodes.append(adjacentActive[i])
-        print(currentNodes)
         currentNodes = sorted(currentNodes, key=lambda x: (x[3]), reverse=False)
         return(currentNodes)
 
