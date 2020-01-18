@@ -18,11 +18,14 @@ class mainGrid:
         self.canvasHeight = 500
         self.mainCanvas = Canvas(self.container, bg="black", width = self.canvasWidth, height = self.canvasHeight)
         self.mainCanvas.grid(row=0, column=0)
+        self.buttonCanvas = Canvas(self.container, bg="white", width = 200, height = self.canvasHeight)
+        self.buttonCanvas.grid(row=0, column= 1)
         self.mainCanvas.bind('<Button-1>', self.click)
         self.mainCanvas.bind('<Button-3>', self.rightClick)
         self.mainCanvas.bind('<space>', self.start)
         """NEEDS TO BE CHANGED SO YOU CAN EDIT SIZE WITH BUTTON"""
-        self.createGrid(20, 20)
+        self.createMenu()
+        self.createGrid(10, 10)
         self.mainCanvas.focus_set()
 
     def createGrid(self, x, y):
@@ -35,8 +38,25 @@ class mainGrid:
             self.gridType.append([])
             for j in range(x):
                 self.grid[i].append(self.mainCanvas.create_rectangle(0, 0, 50, 50, fill="white"))
-                self.gridType[i].append([0, ((y-1)*i)+ j, 0, 1000000, j, i, 0])
+                self.gridType[i].append([0, ((y)*i)+ j, 0, 1000000, j, i, 0])
                 self.mainCanvas.coords(self.grid[i][j], j*self.boxSizeX, i*self.boxSizeY, j*self.boxSizeX + self.boxSizeX, i*self.boxSizeY + self.boxSizeY)
+
+    def createMenu(self):
+        self.startAlgoBtn = Button(self.buttonCanvas, text="Start", command=self.start)
+        self.startAlgoBtn.place(x = 20, y = 100)
+        self.startEntryX = Entry(self.buttonCanvas)
+        self.startEntryX.config(width=4, font="Serif 10 bold")
+        self.startEntryX.insert(0, "10")
+        self.startEntryX.place(x=30, y=50)
+        self.startEntryY = Entry(self.buttonCanvas)
+        self.startEntryY.config(width=4, font="Serif 10 bold")
+        self.startEntryY.insert(0, "10")
+        self.startEntryY.place(x=30, y=70)
+        self.buttonCanvas.create_text(20, 60, fill="black", font="Arial 10 bold", text="X:")
+        self.buttonCanvas.create_text(20, 80, fill="black", font="Arial 10 bold", text="Y:")
+
+    def startAlgo(event):
+        pass
 
 
     def click(self, event):
@@ -58,10 +78,14 @@ class mainGrid:
             self.gridType[gridY][gridX][0] = 0
         print(gridX, gridY)
 
-    def start(self, event):
+    def start(self):
         """NEEDS TO BE CHANGED TO A WINDOW WHERE YOU CAN SELECT ORIGIN"""
         print("Hi")
-        self.UseDjykstras(9, 9)
+        x = self.startEntryX.get()
+        y = self.startEntryY.get()
+        x = int(x)
+        y = int(y)
+        self.UseDjykstras(x, y)
 
     def updateGridRightclick(self, x, y):
         gridX = (ceil(x/self.boxSizeX)) - 1
@@ -83,6 +107,7 @@ class mainGrid:
         #4 is x
         #5 is y
         #6 is unvisited
+        self.mainCanvas.itemconfigure(self.grid[startX][startY], fill="blue")
         self.gridType[startX][startY][2] = -1
         self.gridType[startX][startY][3] = 0
         startNode = self.gridType[startY][startX]
@@ -90,10 +115,6 @@ class mainGrid:
         currentNodes = [currentNode]
         self.state = 0
         self.LoopDjykstras(currentNodes, startNode)
-
-        if self.state == 0:
-            self.LoopDjykstras(currentNodes, startNode)
-            time.sleep(0.05)
         """
         while (self.state == 0):
             print(self.state)
@@ -111,25 +132,23 @@ class mainGrid:
         """
 
     def LoopDjykstras(self, currentNodes, startNode):
-        currentNodes = sorted(currentNodes, key=lambda x: (x[3], x[4], x[5]), reverse=False)
-        print(currentNodes)
-        print("START LOOP")
-        for i, iValue in enumerate(currentNodes):
-            #if self.state == 1:
-            #    break
-            print(currentNodes[i])
-            if iValue[6] == 0:
-                nextNode = i
-                break
-        currentNode = currentNodes[nextNode]
-        currentNodes[i][6] = 1
-        self.mainCanvas.itemconfigure(self.grid[currentNodes[nextNode][5]][currentNodes[nextNode][4]], fill="orange")
-        self.mainCanvas.update_idletasks()
-        currentNodes = self.findAdjacent(currentNode, self.gridType, currentNodes, startNode)
-        if self.state == 0:
-            print(currentNodes)
+        #Move Test nodes into different list so it takes less time to sort
+        while self.state == 0:
             time.sleep(0.1)
-            self.LoopDjykstras(currentNodes, startNode)
+            currentNodes = sorted(currentNodes, key=lambda x: (x[3], x[4], x[5]), reverse=False)
+            print("START LOOP")
+            nextNode = -1
+            for i, iValue in enumerate(currentNodes):
+                if iValue[6] == 0:
+                    nextNode = i
+                    break
+            if nextNode == -1:
+                self.state = 1
+            currentNode = currentNodes[nextNode]
+            currentNodes[i][6] = 1
+            self.mainCanvas.itemconfigure(self.grid[currentNodes[nextNode][5]][currentNodes[nextNode][4]], fill="orange")
+            self.mainCanvas.update_idletasks()
+            currentNodes = self.findAdjacent(currentNode, self.gridType, currentNodes, startNode)
         else:
             print("Done")
 
@@ -144,13 +163,14 @@ class mainGrid:
         NodeY = Node[5]
         distance = Node[3]
         for i in range(0, 8):
+            """REVERSE OUT OF RANGE PROBLEM """
             #if self.gridType[NodeX + adjacent[i][1]][NodeY + adjacent[i][0]][0] == 0:
             try:
                 if ((NodeX + adjacent[i][0]) >= 0) and ((NodeY + adjacent[i][1]) >= 0):
                     print("Passed out of bounds check")
                     print(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
                     #print(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
-                    if Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][0] == 0:
+                    if (Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][0]) == 0:
                         print("Passed proper type check")
                         print(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
                         """MAKE ENABLING CORNERS OPTIONAL"""
@@ -171,6 +191,8 @@ class mainGrid:
                     print("Completed")
             except IndexError:
                 pass
+        print("All adjacentActive Nodes")
+        print(adjacentActive)
         for i, iValue in enumerate(adjacentActive):
             contains = False
             for j, jValue in enumerate(currentNodes):
@@ -183,8 +205,9 @@ class mainGrid:
                         currentNodes[j] = adjacentActive[i]
             if contains == False:
                 print("Passed Appened")
-                print(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
+                print(adjacentActive[i])
                 currentNodes.append(adjacentActive[i])
+                self.mainCanvas.itemconfigure(self.grid[iValue[5]][iValue[4]], fill="yellow")
         currentNodes = sorted(currentNodes, key=lambda x: (x[3]), reverse=False)
         return(currentNodes)
 
@@ -197,7 +220,6 @@ class mainGrid:
             for i, iValue in enumerate(currentNodes):
                 if iValue[1] == lastNode[2]:
                     currentNode = iValue
-                    print(lastNode)
                     self.mainCanvas.create_line(currentNode[4] *self.boxSizeX +(self.boxSizeX/2), currentNode[5]*self.boxSizeY +(self.boxSizeY/2), lastNode[4]*self.boxSizeX + (self.boxSizeX/2), lastNode[5]*self.boxSizeY + (self.boxSizeY/2))
                     lastNode = currentNode
                     break;
