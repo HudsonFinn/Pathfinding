@@ -25,10 +25,13 @@ class mainGrid:
         self.mainCanvas.bind('<space>', self.start)
         """NEEDS TO BE CHANGED SO YOU CAN EDIT SIZE WITH BUTTON"""
         self.createMenu()
-        self.createGrid(10, 10)
         self.mainCanvas.focus_set()
 
-    def createGrid(self, x, y):
+    def createGrid(self):
+        x = self.gridSizeX.get()
+        y = self.gridSizeX.get()
+        x = int(x)
+        y = int(y)
         self.grid = []
         self.gridType = []
         self.boxSizeX = (self.canvasWidth/x)
@@ -43,21 +46,29 @@ class mainGrid:
 
     def createMenu(self):
         self.startAlgoBtn = Button(self.buttonCanvas, text="Start", command=self.start)
-        self.startAlgoBtn.place(x = 20, y = 100)
+        self.startAlgoBtn.place(x = 20, y = 200)
         self.startEntryX = Entry(self.buttonCanvas)
         self.startEntryX.config(width=4, font="Serif 10 bold")
         self.startEntryX.insert(0, "10")
-        self.startEntryX.place(x=30, y=50)
+        self.startEntryX.place(x=30, y=150)
         self.startEntryY = Entry(self.buttonCanvas)
         self.startEntryY.config(width=4, font="Serif 10 bold")
         self.startEntryY.insert(0, "10")
-        self.startEntryY.place(x=30, y=70)
-        self.buttonCanvas.create_text(20, 60, fill="black", font="Arial 10 bold", text="X:")
-        self.buttonCanvas.create_text(20, 80, fill="black", font="Arial 10 bold", text="Y:")
-
-    def startAlgo(event):
-        pass
-
+        self.startEntryY.place(x=30, y=170)
+        self.buttonCanvas.create_text(20, 160, fill="black", font="Arial 10 bold", text="X:")
+        self.buttonCanvas.create_text(20, 180, fill="black", font="Arial 10 bold", text="Y:")
+        self.createGridBtn = Button(self.buttonCanvas, text="Start", command=self.createGrid)
+        self.createGridBtn.place(x = 20, y = 100)
+        self.gridSizeX = Entry(self.buttonCanvas)
+        self.gridSizeX.config(width=4, font="Serif 10 bold")
+        self.gridSizeX.insert(0, "10")
+        self.gridSizeX.place(x=70, y=50)
+        self.gridSizeY = Entry(self.buttonCanvas)
+        self.gridSizeY.config(width=4, font="Serif 10 bold")
+        self.gridSizeY.insert(0, "10")
+        self.gridSizeY.place(x=70, y=70)
+        self.buttonCanvas.create_text(40, 60, fill="black", font="Arial 10 bold", text="WIDTH:")
+        self.buttonCanvas.create_text(40, 80, fill="black", font="Arial 10 bold", text="HEIGHT:")
 
     def click(self, event):
         x, y = event.x, event.y
@@ -79,13 +90,12 @@ class mainGrid:
         print(gridX, gridY)
 
     def start(self):
-        """NEEDS TO BE CHANGED TO A WINDOW WHERE YOU CAN SELECT ORIGIN"""
         print("Hi")
         x = self.startEntryX.get()
         y = self.startEntryY.get()
         x = int(x)
         y = int(y)
-        self.UseDjykstras(x, y)
+        self.SetupDjykstras(x, y)
 
     def updateGridRightclick(self, x, y):
         gridX = (ceil(x/self.boxSizeX)) - 1
@@ -99,7 +109,7 @@ class mainGrid:
 
         print(gridX, gridY)
 
-    def UseDjykstras(self, startX, startY):
+    def SetupDjykstras(self, startX, startY):
         #0 is type (0 for normal, 1 for wall, 2 for target)
         #1 is for node index
         #2 is for previous node
@@ -163,7 +173,6 @@ class mainGrid:
         NodeY = Node[5]
         distance = Node[3]
         for i in range(0, 8):
-            """REVERSE OUT OF RANGE PROBLEM """
             #if self.gridType[NodeX + adjacent[i][1]][NodeY + adjacent[i][0]][0] == 0:
             try:
                 if ((NodeX + adjacent[i][0]) >= 0) and ((NodeY + adjacent[i][1]) >= 0):
@@ -183,12 +192,12 @@ class mainGrid:
                                 Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][3] = (distance + 1)
                                 Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][2] = (Node[1])
                         adjacentActive.append(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
-                if Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][0] == 2:
-                    self.state = 1
-                    Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][2] = (Node[1])
-                    self.drawPath(currentNodes, Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]], startNode)
-                    print(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
-                    print("Completed")
+                    if Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][0] == 2:
+                        self.state = 1
+                        Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][2] = (Node[1])
+                        self.drawPath(currentNodes, Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]], startNode)
+                        print(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
+                        print("Completed")
             except IndexError:
                 pass
         print("All adjacentActive Nodes")
