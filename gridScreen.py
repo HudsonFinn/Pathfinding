@@ -2,6 +2,7 @@ from tkinter import *
 from math import ceil
 import time
 import math
+import timeit
 
 class App:
     def __init__(self, master):
@@ -132,87 +133,82 @@ class mainGrid:
         startNode = self.gridType[startY][startX]
         currentNode = self.gridType[startY][startX]
         currentNodes = [currentNode]
-        self.state = 0
-        self.LoopDjykstras(currentNodes, startNode)
+        self.complete = False
+        self.LoopDijkstra(self.gridType, currentNodes, startNode)
 
-    def LoopDjykstras(self, currentNodes, startNode):
-        #Move Test nodes into different list so it takes less time to sort
-        while self.state == 0:
-            time.sleep(0.1)
-            currentNodes = sorted(currentNodes, key=lambda x: (x[3], x[4], x[5]), reverse=False)
-            print("START LOOP")
-            nextNode = -1
-            for i, iValue in enumerate(currentNodes):
-                if iValue[6] == 0:
-                    nextNode = i
-                    break
-            if nextNode == -1:
-                self.state = 1
-            currentNode = currentNodes[nextNode]
-            currentNodes[i][6] = 1
-            self.mainCanvas.itemconfigure(self.grid[currentNodes[nextNode][5]][currentNodes[nextNode][4]], fill="orange")
+
+    def LoopDijkstra(self, allNodes, activeNodes, startNode):
+        print(activeNodes)
+        while self.complete == False:
+            if len(activeNodes) == 0:
+                self.complete = "None Found"
+                print("Path not found")
+            activeNodes = sorted(activeNodes, key=lambda x: (x[3], x[4], x[5]), reverse=False)
+            targetNode = activeNodes[0]
+            allNodes[targetNode[5]][targetNode[4]][6] = 1
+            self.mainCanvas.itemconfigure(self.grid[targetNode[5]][targetNode[4]], fill="orange")
+            activeNodes.pop(0)
+            print("activeNodes")
+            print(activeNodes)
             self.mainCanvas.update_idletasks()
-            currentNodes = self.findAdjacent(currentNode, self.gridType, currentNodes, startNode)
-        else:
-            print("Done")
+            activeNodes, allNodes = self.findAdjacent(targetNode, activeNodes, allNodes)
+
+        if self.complete == True:
+            print("Drawing")
+            self.drawPath(allNodes, self.finalNode, startNode)
+            self.mainCanvas.update_idletasks()
 
 
-    def findAdjacent(self, Node, Nodes, currentNodes, startNode):
+    def findAdjacent(self, targetNode, activeNodes, allNodes):
+        print("Target Node:")
+        print(targetNode)
         adjacent = [[-1, -1], [0, -1], [1, -1],
                     [-1, 0],          [1, 0],
                     [-1, 1], [0, 1], [1, 1]]
-        state = 0
-        adjacentActive = []
-        NodeX = Node[4]
-        NodeY = Node[5]
-        distance = Node[3]
+        corners = [0, 2, 5, 7]
+        targetNodeX = targetNode[4]
+        targetNodeY = targetNode[5]
+        targetDistance = targetNode[3]
+        unvisitedNodes = []
         for i in range(0, 8):
-            #if self.gridType[NodeX + adjacent[i][1]][NodeY + adjacent[i][0]][0] == 0:
             try:
-                if ((NodeX + adjacent[i][0]) >= 0) and ((NodeY + adjacent[i][1]) >= 0):
-                    print("Passed out of bounds check")
-                    print(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
-                    #print(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
-                    if (Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][0]) == 0:
-                        print("Passed proper type check")
-                        print(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
-                        """MAKE ENABLING CORNERS OPTIONAL"""
-                        if i == 0 or i == 2 or i == 5 or i == 7:
-                            if Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][3] > (distance + math.sqrt(2)):
-                                Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][3] = (distance + math.sqrt(2))
-                                Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][2] = (Node[1])
-                        else:
-                            if Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][3] > (distance + 1):
-                                Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][3] = (distance + 1)
-                                Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][2] = (Node[1])
-                        adjacentActive.append(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
-                    if Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][0] == 2:
-                        self.state = 1
-                        Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]][2] = (Node[1])
-                        self.drawPath(currentNodes, Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]], startNode)
-                        print(Nodes[NodeY + adjacent[i][1]][NodeX + adjacent[i][0]])
-                        print("Completed")
+                if ((targetNodeX + adjacent[i][0]) >= 0) and ((targetNodeY + adjacent[i][1]) >= 0):
+                    print("passed out of bounds")
+                    print(allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]])
+                    if (allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][0]) != 1:
+                        print("passed out of type check")
+                        print(allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]])
+                        if (allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][6]) == 0:
+                            print("passed already contains check")
+                            print(allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]])
+                            if i == 0 or i == 2 or i == 5 or i == 7:
+                                if allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][3] > (targetDistance + math.sqrt(2)):
+                                    allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][3] = (targetDistance + math.sqrt(2))
+                                    allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][2] = (targetNode[4], targetNode[5])
+                            else:
+                                if allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][3] > (targetDistance + 1):
+                                    allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][3] = (targetDistance + 1)
+                                    allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][2] = (targetNode[4], targetNode[5])
+                            contains = False
+                            if (allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][0]) == 2:
+                                self.complete = True
+                                print("Complete")
+                                self.finalNode = allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]]
+                                break
+                            for j, jValue in enumerate(activeNodes):
+                                if jValue[1] == allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][1]:
+                                    contains = True
+                            if contains == False:
+                                print("appending")
+                                print(allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]])
+                                activeNodes.append(allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]])
+                                self.mainCanvas.itemconfigure(self.grid[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]], fill="yellow")
             except IndexError:
                 pass
-        print("All adjacentActive Nodes")
-        print(adjacentActive)
-        for i, iValue in enumerate(adjacentActive):
-            contains = False
-            for j, jValue in enumerate(currentNodes):
-                if iValue[1] == jValue[1]:
-                    print("Value changed")
-                    print(iValue)
-                    print(jValue)
-                    contains = True
-                    if iValue[3] < jValue[3]:
-                        currentNodes[j] = adjacentActive[i]
-            if contains == False:
-                print("Passed Appened")
-                print(adjacentActive[i])
-                currentNodes.append(adjacentActive[i])
-                self.mainCanvas.itemconfigure(self.grid[iValue[5]][iValue[4]], fill="yellow")
-        currentNodes = sorted(currentNodes, key=lambda x: (x[3]), reverse=False)
-        return(currentNodes)
+        self.mainCanvas.update_idletasks()
+        print("Returned active Nodes:")
+        print(activeNodes)
+        return activeNodes, allNodes
 
     def drawPath(self, currentNodes, finalNode, startNode):
         lastNode = finalNode
@@ -220,12 +216,10 @@ class mainGrid:
         while completed != True:
             if lastNode[2] == -1:
                 break
-            for i, iValue in enumerate(currentNodes):
-                if iValue[1] == lastNode[2]:
-                    currentNode = iValue
-                    self.mainCanvas.create_line(currentNode[4] *self.boxSizeX +(self.boxSizeX/2), currentNode[5]*self.boxSizeY +(self.boxSizeY/2), lastNode[4]*self.boxSizeX + (self.boxSizeX/2), lastNode[5]*self.boxSizeY + (self.boxSizeY/2))
-                    lastNode = currentNode
-                    break;
+            currentNode = currentNodes[lastNode[2][1]][lastNode[2][0]]
+            print(lastNode)
+            self.mainCanvas.create_line(currentNode[4] *self.boxSizeX +(self.boxSizeX/2), currentNode[5]*self.boxSizeY +(self.boxSizeY/2), lastNode[4]*self.boxSizeX + (self.boxSizeX/2), lastNode[5]*self.boxSizeY + (self.boxSizeY/2))
+            lastNode = currentNode
 
 
 
