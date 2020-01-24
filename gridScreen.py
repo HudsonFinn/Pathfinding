@@ -44,6 +44,7 @@ class mainGrid:
         self.gridType = []
         self.boxSizeX = (self.canvasWidth/x)
         self.boxSizeY = (self.canvasHeight/y)
+        self.cornersEnabled = False
         for i in range(y):
             self.grid.append([])
             self.gridType.append([])
@@ -143,6 +144,7 @@ class mainGrid:
             if len(activeNodes) == 0:
                 self.complete = "None Found"
                 print("Path not found")
+                break
             activeNodes = sorted(activeNodes, key=lambda x: (x[3], x[4], x[5]), reverse=False)
             targetNode = activeNodes[0]
             allNodes[targetNode[5]][targetNode[4]][6] = 1
@@ -181,10 +183,13 @@ class mainGrid:
                         if (allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][6]) == 0:
                             print("passed already contains check")
                             print(allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]])
-                            if i == 0 or i == 2 or i == 5 or i == 7:
-                                if allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][3] > (targetDistance + math.sqrt(2)):
-                                    allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][3] = (targetDistance + math.sqrt(2))
-                                    allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][2] = (targetNode[4], targetNode[5])
+                            if i in corners:
+                                if self.cornersEnabled:
+                                    if allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][3] > (targetDistance + math.sqrt(2)):
+                                        allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][3] = (targetDistance + math.sqrt(2))
+                                        allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][2] = (targetNode[4], targetNode[5])
+                                else:
+                                    continue
                             else:
                                 if allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][3] > (targetDistance + 1):
                                     allNodes[targetNodeY + adjacent[i][1]][targetNodeX + adjacent[i][0]][3] = (targetDistance + 1)
