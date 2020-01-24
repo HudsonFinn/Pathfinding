@@ -23,13 +23,20 @@ class mainGrid:
         self.mainCanvas.bind('<Button-1>', self.click)
         self.mainCanvas.bind('<Button-3>', self.rightClick)
         self.mainCanvas.bind('<space>', self.start)
-        """NEEDS TO BE CHANGED SO YOU CAN EDIT SIZE WITH BUTTON"""
         self.createMenu()
         self.mainCanvas.focus_set()
 
+    def setGridSize(self):
+        self.gridHeightX = self.gridSizeX.get()
+        self.gridHeightY = self.gridSizeX.get()
+        self.createGrid()
+
+    def refreshGrid(self):
+        self.createGrid()
+
     def createGrid(self):
-        x = self.gridSizeX.get()
-        y = self.gridSizeX.get()
+        x = self.gridHeightX
+        y = self.gridHeightY
         x = int(x)
         y = int(y)
         self.grid = []
@@ -57,8 +64,10 @@ class mainGrid:
         self.startEntryY.place(x=30, y=170)
         self.buttonCanvas.create_text(20, 160, fill="black", font="Arial 10 bold", text="X:")
         self.buttonCanvas.create_text(20, 180, fill="black", font="Arial 10 bold", text="Y:")
-        self.createGridBtn = Button(self.buttonCanvas, text="Start", command=self.createGrid)
+        self.createGridBtn = Button(self.buttonCanvas, text="Start", command=self.setGridSize)
+        self.refreshGridBtn = Button(self.buttonCanvas, text="Reset", command=self.refreshGrid)
         self.createGridBtn.place(x = 20, y = 100)
+        self.refreshGridBtn.place(x = 20, y = 125)
         self.gridSizeX = Entry(self.buttonCanvas)
         self.gridSizeX.config(width=4, font="Serif 10 bold")
         self.gridSizeX.insert(0, "10")
@@ -125,21 +134,6 @@ class mainGrid:
         currentNodes = [currentNode]
         self.state = 0
         self.LoopDjykstras(currentNodes, startNode)
-        """
-        while (self.state == 0):
-            print(self.state)
-            currentNodes = sorted(currentNodes, key=lambda x: (x[3]), reverse=False)
-            for i, iValue in enumerate(currentNodes):
-                self.mainCanvas.itemconfigure(self.grid[currentNodes[i][5]][currentNodes[i][4]], fill="orange")
-                self.mainCanvas.pack()
-                if self.state == 1:
-                    break
-                if iValue[6] == 0:
-                    currentNode = currentNodes[i]
-                    currentNodes[i][6] = 1
-                    print(currentNodes)
-                    currentNodes = self.findAdjacent(currentNode, self.gridType, currentNodes, startNode)
-        """
 
     def LoopDjykstras(self, currentNodes, startNode):
         #Move Test nodes into different list so it takes less time to sort
