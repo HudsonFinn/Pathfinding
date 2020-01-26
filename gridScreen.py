@@ -44,7 +44,6 @@ class mainGrid:
         self.gridType = []
         self.boxSizeX = (self.canvasWidth/x)
         self.boxSizeY = (self.canvasHeight/y)
-        self.cornersEnabled = False
         for i in range(y):
             self.grid.append([])
             self.gridType.append([])
@@ -80,6 +79,9 @@ class mainGrid:
         self.gridSizeY.place(x=70, y=70)
         self.buttonCanvas.create_text(40, 60, fill="black", font="Arial 10 bold", text="WIDTH:")
         self.buttonCanvas.create_text(40, 80, fill="black", font="Arial 10 bold", text="HEIGHT:")
+        self.cornersEnabledButton = IntVar()
+        self.cornersCheckBox = Checkbutton(self.buttonCanvas, text='Diagonals Enabled', variable = self.cornersEnabledButton)
+        self.cornersCheckBox.place(x=20, y=225)
 
     def click(self, event):
         x, y = event.x, event.y
@@ -106,6 +108,7 @@ class mainGrid:
         y = self.startEntryY.get()
         x = int(x)
         y = int(y)
+        self.cornersEnabled = self.cornersEnabledButton.get()
         self.SetupDjykstras(x, y)
 
     def updateGridRightclick(self, x, y):
