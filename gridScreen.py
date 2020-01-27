@@ -1,5 +1,5 @@
 from tkinter import *
-from math import ceil
+from math import ceil, sqrt
 import time
 import math
 import timeit
@@ -109,7 +109,8 @@ class mainGrid:
         x = int(x)
         y = int(y)
         self.cornersEnabled = self.cornersEnabledButton.get()
-        self.SetupDjykstras(x, y)
+        #self.SetupDjykstras(x, y)
+        self.SetupAStar(self.gridType[y][x], self.gridType[9][9], y, x)
 
     def updateGridRightclick(self, x, y):
         gridX = (ceil(x/self.boxSizeX)) - 1
@@ -218,10 +219,111 @@ class mainGrid:
         print(activeNodes)
         return activeNodes, allNodes
 
+    def SetupAStar(self, startNode, endNode, y, x):
+        #0 is type (0 for normal, 1 for wall, 2 for target)
+        #1 is for node index
+        #2 is for previous node (x, y)
+        #3 if for G value (distance to previous node)
+        #4 is x
+        #5 is y
+        #6 is for F value (G + H)(H is distance to target)
+        #self.mainCanvas.itemconfigure(self.grid[startX][startY], fill="blue")
+        self.gridType[x][y][2] = -1
+        self.gridType[x][y][3] = 0
+        self.complete = False
+        self.LoopAStar(self.gridType, startNode, endNode)
+
+    def LoopAStar(self, allNodes, startNode, endNode):
+        openList = []
+        closedList = []
+        openList.append(startNode)
+        while self.complete == False:
+            time.sleep(1)
+            if len(openList) == 0:
+                self.complete = "None Found"
+                print("Path not found")
+                break
+            print("ClosedList")
+            print(closedList)
+            print("OpenList")
+            print(openList)
+            openList = sorted(openList, key=lambda x: x[6], reverse=False)
+            currentNode = openList[0]
+            openList.pop(0)
+            closedList.append(currentNode)
+            self.mainCanvas.itemconfigure(self.grid[currentNode[5]][currentNode[4]], fill="orange")
+            self.mainCanvas.update_idletasks()
+            if currentNode[1] == endNode[1]:
+                self.complete = True
+                self.finalNode = currentNode
+
+            adjacentNodes = self.getAdjacent(allNodes, currentNode, endNode)
+
+            for adjacentIndex, adjacentValue in enumerate(adjacentNodes):
+                letContinue = False
+                for index, value in enumerate(closedList):
+                    if value[1] == adjacentValue[1]:
+                        letContinue = True
+                        break
+                if letContinue == True:
+                    continue
+
+                adG = currentNode[3] + 1
+                adHX = adjacentValue[4] - endNode[4]
+                adHX = adHX ** 2
+                adHY = adjacentValue[5] - endNode[5]
+                adHY = adHY ** 2
+                adH = adHX + adHY
+                adH = sqrt(adH)
+                adF = adG + adH
+                letContinue = False
+                for index, value in enumerate(openList):
+                    if value[1] == adjacentValue[1]:
+                        print("Matching")
+                        if adG < value[3]:
+                            adjacentValue[2] = (currentNode[4], currentNode[5])
+                            adjacentValue[3] = adG
+                            adjacentValue[6] = adF
+                            openList[index] = adjacentValue
+                            print("Changed")
+                            print(adG)
+                            print(value[3])
+                        letContinue = True
+                        break
+                if letContinue == True:
+                    continue
+
+                adjacentValue[2] = (currentNode[4], currentNode[5])
+                adjacentValue[3] = adG
+                adjacentValue[6] = adF
+                openList.append(adjacentValue)
+        if self.complete == True:
+            print("Drawing")
+            self.drawPath(allNodes, self.finalNode, startNode)
+            self.mainCanvas.update_idletasks()
+
+    def getAdjacent(self, allNodes, currentNode, endNode):
+        listOfAdjacents = []
+        adjacent = [[-1, -1], [0, -1], [1, -1],
+                    [-1, 0],          [1, 0],
+                    [-1, 1], [0, 1], [1, 1]]
+
+        for i in adjacent:
+            try:
+                thisAdjacent = allNodes[currentNode[5] + i[1]][currentNode[4] + i[0]]
+                if ((currentNode[4] + i[0]) >= 0) and ((currentNode[5] + i[1]) >= 0):
+                    if thisAdjacent[0] != 1:
+                        listOfAdjacents.append(thisAdjacent)
+            except IndexError:
+                pass
+
+        return listOfAdjacents
+
     def drawPath(self, currentNodes, finalNode, startNode):
         lastNode = finalNode
         completed = False
         while completed != True:
+            time.sleep(1)
             if lastNode[2] == -1:
                 break
             currentNode = currentNodes[lastNode[2][1]][lastNode[2][0]]
