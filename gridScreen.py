@@ -126,7 +126,7 @@ class mainGrid:
     def SetupDjykstras(self, startX, startY):
         #0 is type (0 for normal, 1 for wall, 2 for target)
         #1 is for node index
-        #2 is for previous node
+        #2 is for previous node (x, y)
         #3 is for distance
         #4 is x
         #5 is y
