@@ -258,33 +258,37 @@ class mainGrid:
                 self.finalNode = currentNode
 
             adjacentNodes = self.getAdjacent(allNodes, currentNode, endNode)
-
+            print("adjacent")
+            print(adjacentNodes)
             for adjacentIndex, adjacentValue in enumerate(adjacentNodes):
                 letContinue = False
                 for index, value in enumerate(closedList):
-                    if value[1] == adjacentValue[1]:
+                    if value[1] == adjacentValue[0][1]:
                         letContinue = True
                         break
                 if letContinue == True:
                     continue
 
-                adG = currentNode[3] + 1
-                adHX = adjacentValue[4] - endNode[4]
+                if adjacentValue[1] in [0, 2, 5, 7]:
+                    adG = currentNode[3] + (sqrt(2))
+                else:
+                    adG = currentNode[3] + 1
+                adHX = adjacentValue[0][4] - endNode[4]
                 adHX = adHX ** 2
-                adHY = adjacentValue[5] - endNode[5]
+                adHY = adjacentValue[0][5] - endNode[5]
                 adHY = adHY ** 2
                 adH = adHX + adHY
-                adH = sqrt(adH)
+                #adH = sqrt(adH)
                 adF = adG + adH
                 letContinue = False
                 for index, value in enumerate(openList):
-                    if value[1] == adjacentValue[1]:
+                    if value[1] == adjacentValue[0][1]:
                         print("Matching")
                         if adG < value[3]:
-                            adjacentValue[2] = (currentNode[4], currentNode[5])
-                            adjacentValue[3] = adG
-                            adjacentValue[6] = adF
-                            openList[index] = adjacentValue
+                            adjacentValue[0][2] = (currentNode[4], currentNode[5])
+                            adjacentValue[0][3] = adG
+                            adjacentValue[0][6] = adF
+                            openList[index] = adjacentValue[0]
                             print("Changed")
                             print(adG)
                             print(value[3])
@@ -293,10 +297,10 @@ class mainGrid:
                 if letContinue == True:
                     continue
 
-                adjacentValue[2] = (currentNode[4], currentNode[5])
-                adjacentValue[3] = adG
-                adjacentValue[6] = adF
-                openList.append(adjacentValue)
+                adjacentValue[0][2] = (currentNode[4], currentNode[5])
+                adjacentValue[0][3] = adG
+                adjacentValue[0][6] = adF
+                openList.append(adjacentValue[0])
         if self.complete == True:
             print("Drawing")
             self.drawPath(allNodes, self.finalNode, startNode)
@@ -308,12 +312,12 @@ class mainGrid:
                     [-1, 0],          [1, 0],
                     [-1, 1], [0, 1], [1, 1]]
 
-        for i in adjacent:
+        for index, i in enumerate(adjacent):
             try:
                 thisAdjacent = allNodes[currentNode[5] + i[1]][currentNode[4] + i[0]]
                 if ((currentNode[4] + i[0]) >= 0) and ((currentNode[5] + i[1]) >= 0):
                     if thisAdjacent[0] != 1:
-                        listOfAdjacents.append(thisAdjacent)
+                        listOfAdjacents.append([thisAdjacent, index])
             except IndexError:
                 pass
 
